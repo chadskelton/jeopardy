@@ -10,4 +10,3 @@ cssselect==0.9.1
 
 requests
 beautifulsoup4
-scraperwiki
