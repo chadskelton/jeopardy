@@ -54,7 +54,7 @@ def extract_clues_from_soup(soup, game_url):
 
     # For each clue cell on the page
     for clue_td in soup.select("td.clue"):
-        # In J-Archive, each clue cell contains two <td class="clue_text">:
+        # Each clue cell contains two <td class="clue_text">:
         #   1) question
         #   2) hidden answer block (with <em class="correct_response"> inside)
         clue_text_tds = clue_td.find_all("td", class_="clue_text")
@@ -98,13 +98,11 @@ def extract_clues_from_soup(soup, game_url):
             elif rid == "final_jeopardy_round":
                 round_name = "Final Jeopardy!"
 
-        # Category (we find the containing round table, then index the column)
+        # Category for that clue
         category = None
         table_round = (
             clue_td.find_parent("table", class_="round")
-            or round_div.find("table", class_="final_round")
-            if round_div
-            else None
+            or (round_div.find("table", class_="final_round") if round_div else None)
         )
 
         if table_round:
@@ -116,7 +114,6 @@ def extract_clues_from_soup(soup, game_url):
 
             # Determine which column (0–5) this clue is in
             tr = clue_td.parent  # row that the clue cell sits in
-            # Only consider immediate td children in this row that are clue cells
             row_clue_tds = [
                 td for td in tr.find_all("td", recursive=False)
                 if "clue" in (td.get("class") or [])
@@ -126,7 +123,7 @@ def extract_clues_from_soup(soup, game_url):
                 if 0 <= col_index < len(categories):
                     category = categories[col_index]
             except ValueError:
-                pass  # not found, ignore
+                pass
 
         record = {
             "game_url": game_url,
@@ -145,7 +142,7 @@ def extract_clues_from_soup(soup, game_url):
 
 
 def scrape_game(game_url):
-    print(f"Scraping {game_url}...")
+    print("Scraping {}...".format(game_url))
     resp = requests.get(game_url)
     resp.raise_for_status()
 
@@ -158,10 +155,9 @@ def scrape_game(game_url):
             unique_keys=["game_url", "question"],
             data=rec,
         )
-    print(f"Saved {len(records)} clues from {game_url}.")
+    print("Saved {} clues from {}.".format(len(records), game_url))
 
 
 if __name__ == "__main__":
     for url in get_start_urls():
         scrape_game(url)
-
